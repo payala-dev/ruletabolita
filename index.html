@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>¿A dónde vamos? 💫</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f0e17;
+      --surface: #1a1828;
+      --accent: #ff6b6b;
+      --accent2: #ffd166;
+      --accent3: #a29bfe;
+      --text: #fffffe;
+      --muted: #a7a9be;
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 3rem;
+      overflow-x: hidden;
+    }
+
+    /* Decoración de fondo */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px; left: -200px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(162,155,254,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -200px; right: -200px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(255,107,107,0.10) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.8rem, 6vw, 2.4rem);
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+    header p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 6px;
+    }
+
+    /* --- Sección de inputs --- */
+    .inputs-section {
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 1.5rem;
+    }
+    .inputs-section h2 {
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .option-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .option-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .color-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .option-row input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .option-row input:focus {
+      border-color: rgba(162,155,254,0.5);
+    }
+    .option-row input::placeholder { color: var(--muted); }
+
+    .remove-btn {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.2);
+      cursor: pointer;
+      font-size: 1.2rem;
+      line-height: 1;
+      padding: 4px;
+      transition: color 0.2s;
+    }
+    .remove-btn:hover { color: var(--accent); }
+
+    .add-btn {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px dashed rgba(255,255,255,0.15);
+      border-radius: 10px;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      padding: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .add-btn:hover {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      border-color: rgba(255,255,255,0.3);
+    }
+
+    /* --- Ruleta --- */
+    .wheel-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .wheel-wrapper {
+      position: relative;
+      width: min(300px, 80vw);
+      height: min(300px, 80vw);
+    }
+
+    canvas {
+      display: block;
+      border-radius: 50%;
+      box-shadow: 0 0 60px rgba(162,155,254,0.15), 0 0 0 4px rgba(255,255,255,0.05);
+    }
+
+    /* Flecha indicadora */
+    .pointer {
+      position: absolute;
+      top: 50%;
+      right: -14px;
+      transform: translateY(-50%);
+      width: 0; height: 0;
+      border-top: 11px solid transparent;
+      border-bottom: 11px solid transparent;
+      border-left: 20px solid var(--accent2);
+      filter: drop-shadow(0 0 6px rgba(255,209,102,0.6));
+    }
+
+    /* Botón girar */
+    .spin-btn {
+      background: linear-gradient(135deg, var(--accent) 0%, #ff8e53 100%);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 14px 48px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 24px rgba(255,107,107,0.35);
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    }
+    .spin-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(255,107,107,0.45);
+    }
+    .spin-btn:active { transform: scale(0.97); }
+    .spin-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Resultado */
+    .result-box {
+      text-align: center;
+      padding: 18px 28px;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      width: 100%;
+      animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes pop {
+      from { transform: scale(0.85); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+    .result-label {
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 6px;
+    }
+    .result-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      color: var(--text);
+    }
+    .result-sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>¿A dónde vamos? 💫</h1>
+    <p>Escriban sus opciones y que la suerte decida.</p>
+  </header>
+
+  <!-- Opciones -->
+  <section class="inputs-section">
+    <h2>Opciones</h2>
+    <div class="option-list" id="option-list"></div>
+    <button class="add-btn" onclick="addOption()">+ Agregar lugar</button>
+  </section>
+
+  <!-- Ruleta y botón -->
+  <section class="wheel-section">
+    <div class="wheel-wrapper">
+      <canvas id="canvas"></canvas>
+      <div class="pointer"></div>
+    </div>
+
+    <button class="spin-btn" id="spin-btn" onclick="spin()">Girar 🎲</button>
+
+    <div class="result-box hidden" id="result-box">
+      <p class="result-label">✨ El destino eligió</p>
+      <p class="result-text" id="result-name"></p>
+      <p class="result-sub">¡A disfrutarlo juntos!</p>
+    </div>
+  </section>
+
+  <script>
+    // -------- COLORES DE LOS SEGMENTOS --------
+    const PALETTE = [
+      '#a29bfe','#fd79a8','#fdcb6e','#55efc4',
+      '#74b9ff','#e17055','#00cec9','#fab1a0',
+      '#6c5ce7','#ffeaa7'
+    ];
+
+    // -------- ESTADO --------
+    let options = [
+      { id: 1, text: 'Tacos' },
+      { id: 2, text: 'Sushi' },
+    ];
+    let nextId = 3;
+    let spinning = false;
+    let angle = 0; // ángulo actual de la rueda en radianes
+
+    // -------- RENDER DE INPUTS --------
+    function renderInputs() {
+      const list = document.getElementById('option-list');
+      list.innerHTML = '';
+
+      options.forEach(function(opt, i) {
+        const color = PALETTE[i % PALETTE.length];
+        const row = document.createElement('div');
+        row.className = 'option-row';
+        row.innerHTML =
+          '<div class="color-dot" style="background:' + color + '"></div>' +
+          '<input type="text" value="' + opt.text + '" placeholder="Escribe un lugar" ' +
+            'oninput="updateText(' + opt.id + ', this.value)" />' +
+          '<button class="remove-btn" onclick="removeOption(' + opt.id + ')">×</button>';
+        list.appendChild(row);
+      });
+
+      drawWheel();
+    }
+
+    function addOption() {
+      if (options.length >= 10) return;
+      options.push({ id: nextId++, text: '' });
+      renderInputs();
+    }
+
+    function removeOption(id) {
+      if (options.length <= 2) return; // mínimo 2 opciones
+      options = options.filter(function(o) { return o.id !== id; });
+      renderInputs();
+    }
+
+    function updateText(id, val) {
+      const opt = options.find(function(o) { return o.id === id; });
+      if (opt) opt.text = val;
+      drawWheel();
+    }
+
+    // -------- DIBUJO DE LA RULETA --------
+    function drawWheel() {
+      const canvas = document.getElementById('canvas');
+      const size = canvas.parentElement.offsetWidth;
+      canvas.width = size;
+      canvas.height = size;
+
+      const ctx = canvas.getContext('2d');
+      const cx = size / 2;
+      const cy = size / 2;
+      const r  = size / 2 - 2;
+      const n  = options.length;
+      const arc = (2 * Math.PI) / n;
+
+      ctx.clearRect(0, 0, size, size);
+
+      options.forEach(function(opt, i) {
+        const startA = angle + i * arc;
+        const endA   = startA + arc;
+        const color  = PALETTE[i % PALETTE.length];
+
+        // Segmento
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, startA, endA);
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(15,14,23,0.4)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Texto
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(startA + arc / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = 'rgba(15,14,23,0.85)';
+        ctx.font = 'bold ' + Math.max(11, Math.min(14, size / 22)) + 'px DM Sans, sans-serif';
+        const label = opt.text.trim() || '...';
+        const shortLabel = label.length > 14 ? label.slice(0, 13) + '…' : label;
+        ctx.fillText(shortLabel, r - 12, 5);
+        ctx.restore();
+      });
+
+      // Centro decorativo
+      ctx.beginPath();
+      ctx.arc(cx, cy, size * 0.075, 0, 2 * Math.PI);
+      ctx.fillStyle = '#0f0e17';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Punto central
+      ctx.beginPath();
+      ctx.arc(cx, cy, size * 0.022, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.fill();
+    }
+
+    // -------- ANIMACIÓN DE GIRO --------
+    function spin() {
+      if (spinning) return;
+
+      const valid = options.filter(function(o) { return o.text.trim() !== ''; });
+      if (valid.length < 2) {
+        alert('Agrega al menos 2 lugares antes de girar.');
+        return;
+      }
+
+      spinning = true;
+      document.getElementById('spin-btn').disabled = true;
+      document.getElementById('result-box').classList.add('hidden');
+
+      // Elegir ganador al azar entre las opciones válidas
+      const winnerIdx = Math.floor(Math.random() * valid.length);
+
+      // Calcular ángulo objetivo para que el ganador quede apuntado por la flecha
+      // La flecha apunta a las 3 en punto (ángulo 0 del canvas = derecha)
+      const n      = valid.length;
+      const arc    = (2 * Math.PI) / n;
+      const spins  = (6 + Math.floor(Math.random() * 5)) * 2 * Math.PI;
+      // El centro del segmento ganador debe quedar en el ángulo 0
+      const targetSegCenter = -winnerIdx * arc - arc / 2;
+      const fullTarget = angle + spins + (targetSegCenter - angle % (2 * Math.PI)) + 2 * Math.PI;
+
+      const duration = 3500 + Math.random() * 800;
+      const startAngle = angle;
+      const startTime = performance.now();
+
+      function easeOut(t) {
+        return 1 - Math.pow(1 - t, 4);
+      }
+
+      function frame(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        angle = startAngle + (fullTarget - startAngle) * easeOut(progress);
+        drawWheel();
+
+        if (progress < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          angle = fullTarget;
+          drawWheel();
+          spinning = false;
+          document.getElementById('spin-btn').disabled = false;
+
+          // Mostrar resultado
+          document.getElementById('result-name').textContent = valid[winnerIdx].text;
+          document.getElementById('result-box').classList.remove('hidden');
+        }
+      }
+
+      requestAnimationFrame(frame);
+    }
+
+    // -------- INICIAR --------
+    renderInputs();
+
+    // Redibujar al cambiar tamaño de pantalla
+    window.addEventListener('resize', drawWheel);
+  </script>
+</body>
+</html>
